@@ -1,50 +1,120 @@
 import sqlite3
-from sqlalchemy import Column, ForeignKey, create_engine
+from sqlalchemy import Column, ForeignKey, create_engine, Table, MetaData
 from sqlalchemy import Integer, Date, String
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship, Session
 from datetime import date
 
-database = declarative_base()
-engine = create_engine('sqlite:///my_database.db')
+class Database():
+    def __init__(self):
+        meta = MetaData()
+        self.users = Table("Users", meta,
+            Column("id", Integer, primary_key=True, autoincrement=True),
+            Column("username", String, nullable=False),
+            Column("password", String, nullable=False)
+        )
+        self.regular_incomes = Table("regular_incomes", meta,
+            Column("id", Integer, primary_key=True, autoincrement=True),
+            Column("user", String),
+            Column("header", String),
+            Column("description", String),
+            Column("day_of_month", Integer),
+            Column("sum", Integer, nullable=False)
+        )
+        self.regular_expenses = Table("regular_expenses", meta,
+            Column("id", Integer, primary_key=True, autoincrement=True),
+            Column("user", String),
+            Column("header", String),
+            Column("description", String),
+            Column("day_of_month", Integer),
+            Column("sum", Integer, nullable=False)
+        )
+        self.unit_events = Table("unit_events", meta,
+            Column("id", Integer, primary_key=True, autoincrement=True),
+            Column("user", String),
+            Column("header", String),
+            Column("description", String),
+            Column("date", Date),
+            Column("type", String),
+            Column("sum", Integer, nullable=False)
+        )
+        self.engine = create_engine('sqlite:///my_database.db')
+        meta.create_all(self.engine)
 
+    def connect_database(self):
+        connection = self.engine.connect()
+        return connection
 
-class Expence(database):
-    __tablename__ = 'expences'
+    def menu_action(self, menu):
+        print("Pls select function:")
+        for key, text in menu.items():
+            print(f"{key}. {text[0]}")
+        try:
+            num = int(input())
+            menu.get(num)[1]()
+        except:
+            print("Incorrect input")
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    descriptyon = Column(String)
-    date = Column(Date)
-    sum = Column(Integer, nullable=False)
+# class Expence(database):
+#     __tablename__ = 'expences'
+#
+#     id = Column(Integer, primary_key=True, autoincrement=True)
+#     descriptyon = Column(String)
+#     date = Column(Date)
+#     sum = Column(Integer, nullable=False)
 
 
 class UserInterface():
     def __init__(self):
-        self.menu_dict = {1: ("Add regular cost", self.add_regular), 2: ("Add unit cost", self.add_unit), 3: ("Get finance situation", self.get_situation)}
+        self.main_menu = {
+            1: ("Regular expenses options...", self.add_field_expense),
+            2: ("Regular incomes options...", self.add_field_income),
+            3: ("Unit events options...", self.add_field_event)
+        }
 
-    def menu_action(self):
-        print("For use this stuff please enter num of function:")
-        for key, text in self.menu_dict.items():
-            print(f"{key}. {text[0]}")
-        try:
-            num = int(input())
-            self.menu_dict.get(num)[1]()
-        except:
-            print("Incorrect input")
+    def start_ui(self):
+        self.menu_action(self.main_menu)
 
-    def add_regular(self):
-        print("I added new regular cost!")
+    def create_request_add_field_income(self, db):
+        req = db.regular_incomes.insert().values(
+            user="Scoot",
+            header="salary",
+            description="typical salary",
+            day_of_month=5,
+            sum=31000
+        )
+        return req
 
-    def add_unit(self):
-        print("I Added new unit cost!")
+    def create_request_add_field_expense(self, db):
+        req = db.regular_expenses.insert().values(
+            user="Scoot",
+            header="rent",
+            description="typical rent",
+            day_of_month=12,
+            sum=14000
+        )
+        return req
 
-    def get_situation(self):
-        print("You situation is very bad :(")
+    def create_request_add_field_event(self, db):
+        req = db.unit_events.insert().values(
+            user="Scoot",
+            header="shaverma",
+            description="typical shaverma",
+            date=date(2022, 10, 25),
+            type="expence",
+            sum=250
+        )
+        return req
 
 
 if __name__ == '__main__':
     ui = UserInterface()
-    while True:
-        ui.menu_action()
+    database = Database()
+    conn = database.connect_database()
+    ui.start_ui()
+    ui.cre
+
+    # ui = UserInterface()
+    # ui.menu_action()
     # with Session(engine) as session:
     #     expence = Expence(descriptyon = 'Viduha', date = date(2022, 11, 30), sum = 25000)
     #     session.add(expence)
