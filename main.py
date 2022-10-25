@@ -6,13 +6,13 @@ from datetime import date
 
 class Database():
     def __init__(self):
-        meta = MetaData()
-        self.users = Table("Users", meta,
+        self.meta = MetaData()
+        self.users = Table("Users", self.meta,
             Column("id", Integer, primary_key=True, autoincrement=True),
             Column("username", String, nullable=False),
             Column("password", String, nullable=False)
         )
-        self.regular_incomes = Table("regular_incomes", meta,
+        self.regular_incomes = Table("regular_incomes", self.meta,
             Column("id", Integer, primary_key=True, autoincrement=True),
             Column("user", String),
             Column("header", String),
@@ -20,7 +20,7 @@ class Database():
             Column("day_of_month", Integer),
             Column("sum", Integer, nullable=False)
         )
-        self.regular_expenses = Table("regular_expenses", meta,
+        self.regular_expenses = Table("regular_expenses", self.meta,
             Column("id", Integer, primary_key=True, autoincrement=True),
             Column("user", String),
             Column("header", String),
@@ -28,7 +28,7 @@ class Database():
             Column("day_of_month", Integer),
             Column("sum", Integer, nullable=False)
         )
-        self.unit_events = Table("unit_events", meta,
+        self.unit_events = Table("unit_events", self.meta,
             Column("id", Integer, primary_key=True, autoincrement=True),
             Column("user", String),
             Column("header", String),
@@ -38,21 +38,45 @@ class Database():
             Column("sum", Integer, nullable=False)
         )
         self.engine = create_engine('sqlite:///my_database.db')
-        meta.create_all(self.engine)
+        self.meta.create_all(self.engine)
+        self.connection = self.engine.connect()
 
-    def connect_database(self):
-        connection = self.engine.connect()
-        return connection
+        print(*(column.name for column in self.unit_events.columns))
+        # print(self.unit_events.columns)
 
-    def menu_action(self, menu):
-        print("Pls select function:")
-        for key, text in menu.items():
-            print(f"{key}. {text[0]}")
-        try:
-            num = int(input())
-            menu.get(num)[1]()
-        except:
-            print("Incorrect input")
+    def create_request_add_field_income(self):
+        req = self.regular_incomes.insert().values(
+            user="Scoot",
+            header="salary",
+            description="typical salary",
+            day_of_month=5,
+            sum=31000
+        )
+        with self.connection.begin():
+            self.connection.execute(req)
+
+    def create_request_add_field_expense(self):
+        req = self.regular_expenses.insert().values(
+            user="Scoot",
+            header="rent",
+            description="typical rent",
+            day_of_month=12,
+            sum=14000
+        )
+        with self.connection.begin():
+            self.connection.execute(req)
+
+    def create_request_add_field_event(self):
+        req = self.unit_events.insert().values(
+            user="Scoot",
+            header="shaverma",
+            description="typical shaverma",
+            date=date(2022, 10, 25),
+            type="expence",
+            sum=250
+        )
+        with self.connection.begin():
+            self.connection.execute(req)
 
 # class Expence(database):
 #     __tablename__ = 'expences'
@@ -63,55 +87,36 @@ class Database():
 #     sum = Column(Integer, nullable=False)
 
 
-class UserInterface():
-    def __init__(self):
-        self.main_menu = {
-            1: ("Regular expenses options...", self.add_field_expense),
-            2: ("Regular incomes options...", self.add_field_income),
-            3: ("Unit events options...", self.add_field_event)
-        }
+# class UserInterface():
+#     def __init__(self):
+#         self.main_menu = {
+#             1: ("Regular expenses options...", self.add_field_expense),
+#             2: ("Regular incomes options...", self.add_field_income),
+#             3: ("Unit events options...", self.add_field_event)
+#         }
+#
+#     def menu_action(self, menu):
+#         print("Pls select function:")
+#         for key, text in menu.items():
+#             print(f"{key}. {text[0]}")
+#         try:
+#             num = int(input())
+#             menu.get(num)[1]()
+#         except:
+#             print("Incorrect input")
+#
+#     def start_ui(self):
+#         self.menu_action(self.main_menu)
 
-    def start_ui(self):
-        self.menu_action(self.main_menu)
-
-    def create_request_add_field_income(self, db):
-        req = db.regular_incomes.insert().values(
-            user="Scoot",
-            header="salary",
-            description="typical salary",
-            day_of_month=5,
-            sum=31000
-        )
-        return req
-
-    def create_request_add_field_expense(self, db):
-        req = db.regular_expenses.insert().values(
-            user="Scoot",
-            header="rent",
-            description="typical rent",
-            day_of_month=12,
-            sum=14000
-        )
-        return req
-
-    def create_request_add_field_event(self, db):
-        req = db.unit_events.insert().values(
-            user="Scoot",
-            header="shaverma",
-            description="typical shaverma",
-            date=date(2022, 10, 25),
-            type="expence",
-            sum=250
-        )
-        return req
 
 
 if __name__ == '__main__':
-    ui = UserInterface()
+    # ui = UserInterface()
     database = Database()
-    conn = database.connect_database()
-    ui.start_ui()
-    ui.cre
+    # database.create_request_add_field_expense()
+
+    # ui.start_ui()
+    # ui.cre
 
     # ui = UserInterface()
     # ui.menu_action()
