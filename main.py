@@ -4,6 +4,7 @@ from sqlalchemy import Integer, Date, String
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship, Session
 from datetime import date
 
+
 class Database():
     def __init__(self):
         self.meta = MetaData()
@@ -14,7 +15,7 @@ class Database():
         )
         self.regular_incomes = Table("regular_incomes", self.meta,
             Column("id", Integer, primary_key=True, autoincrement=True),
-            Column("user", String),
+            Column("user_id", String),
             Column("header", String),
             Column("description", String),
             Column("day_of_month", Integer),
@@ -22,7 +23,7 @@ class Database():
         )
         self.regular_expenses = Table("regular_expenses", self.meta,
             Column("id", Integer, primary_key=True, autoincrement=True),
-            Column("user", String),
+            Column("user_id", String),
             Column("header", String),
             Column("description", String),
             Column("day_of_month", Integer),
@@ -30,7 +31,7 @@ class Database():
         )
         self.unit_events = Table("unit_events", self.meta,
             Column("id", Integer, primary_key=True, autoincrement=True),
-            Column("user", String),
+            Column("user_id", String),
             Column("header", String),
             Column("description", String),
             Column("date", Date),
@@ -41,8 +42,24 @@ class Database():
         self.meta.create_all(self.engine)
         self.connection = self.engine.connect()
 
-        print(*(column.name for column in self.unit_events.columns))
+        print(*(column.type for column in self.unit_events.columns))
         # print(self.unit_events.columns)
+
+    def add_field(self, table):
+        data = {}
+        for column in table.columns:
+            if column.name.lower() == "id":
+                continue
+            print(f"{column.name} {column.type}")
+            value = input()
+            data.update({column.name: value})
+
+            req = table.insert().values(
+                **data
+            )
+
+        with self.connection.begin():
+            self.connection.execute(req)
 
     def create_request_add_field_income(self):
         req = self.regular_incomes.insert().values(
@@ -88,12 +105,20 @@ class Database():
 
 
 # class UserInterface():
-#     def __init__(self):
+#     def __init__(self, dbObject):
 #         self.main_menu = {
-#             1: ("Regular expenses options...", self.add_field_expense),
-#             2: ("Regular incomes options...", self.add_field_income),
-#             3: ("Unit events options...", self.add_field_event)
+#             1: ("Regular expenses options...", dbObject.),
+#             2: ("Regular incomes options...", ),
+#             3: ("Unit events options...", )
 #         }
+#
+#         self.table_menu = {
+#             1: ("Add new row", ),
+#             2: ("Delete row", ),
+#             3: ("Show all rows", )
+#         }
+#
+#
 #
 #     def menu_action(self, menu):
 #         print("Pls select function:")
@@ -113,6 +138,7 @@ class Database():
 if __name__ == '__main__':
     # ui = UserInterface()
     database = Database()
+    database.add_field(database.regular_expenses)
     # database.create_request_add_field_expense()
 
     # ui.start_ui()
