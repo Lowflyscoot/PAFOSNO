@@ -5,6 +5,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker, relationship, Session
 from datetime import date
 
 
+
 class Database():
     def __init__(self):
         self.meta = MetaData()
@@ -42,15 +43,16 @@ class Database():
         self.meta.create_all(self.engine)
         self.connection = self.engine.connect()
 
-        print(*(column.type for column in self.unit_events.columns))
+        # print(*(column.type for column in self.unit_events.columns))
         # print(self.unit_events.columns)
 
     def add_field(self, table):
         data = {}
         for column in table.columns:
+            print(column.name)
             if column.name.lower() == "id":
                 continue
-            print(f"{column.name} {column.type}")
+            print(f"Write the field {column.name} with type {column.type}")
             value = input()
             data.update({column.name: value})
 
@@ -61,39 +63,13 @@ class Database():
         with self.connection.begin():
             self.connection.execute(req)
 
-    def create_request_add_field_income(self):
-        req = self.regular_incomes.insert().values(
-            user="Scoot",
-            header="salary",
-            description="typical salary",
-            day_of_month=5,
-            sum=31000
-        )
-        with self.connection.begin():
-            self.connection.execute(req)
+    def get_numerable_tables_dict(self):
+        return {1: self.users,
+                2: self.regular_incomes,
+                3: self.regular_expenses,
+                4: self.unit_events}
 
-    def create_request_add_field_expense(self):
-        req = self.regular_expenses.insert().values(
-            user="Scoot",
-            header="rent",
-            description="typical rent",
-            day_of_month=12,
-            sum=14000
-        )
-        with self.connection.begin():
-            self.connection.execute(req)
 
-    def create_request_add_field_event(self):
-        req = self.unit_events.insert().values(
-            user="Scoot",
-            header="shaverma",
-            description="typical shaverma",
-            date=date(2022, 10, 25),
-            type="expence",
-            sum=250
-        )
-        with self.connection.begin():
-            self.connection.execute(req)
 
 # class Expence(database):
 #     __tablename__ = 'expences'
@@ -104,44 +80,36 @@ class Database():
 #     sum = Column(Integer, nullable=False)
 
 
-# class UserInterface():
-#     def __init__(self, dbObject):
-#         self.main_menu = {
-#             1: ("Regular expenses options...", dbObject.),
-#             2: ("Regular incomes options...", ),
-#             3: ("Unit events options...", )
-#         }
-#
-#         self.table_menu = {
-#             1: ("Add new row", ),
-#             2: ("Delete row", ),
-#             3: ("Show all rows", )
-#         }
-#
-#
-#
-#     def menu_action(self, menu):
-#         print("Pls select function:")
-#         for key, text in menu.items():
-#             print(f"{key}. {text[0]}")
-#         try:
-#             num = int(input())
-#             menu.get(num)[1]()
-#         except:
-#             print("Incorrect input")
-#
-#     def start_ui(self):
-#         self.menu_action(self.main_menu)
+class UserInterface():
+    # def __init__(self, dbObject):
+
+    def menu_action(self, db, menu):
+        print("Select table:")
+        for _, tuple_data in menu.items():
+            print(f"{tuple_data[0]}")
+        # try:
+        num = int(input())
+        db.add_field(menu.get(num)[1])
+        # except:
+        #     print("Incorrect input")
+        #     self.start_ui(db)
+
+    def start_ui(self, db):
+        tables_dict = db.get_numerable_tables_dict()
+        menu = {}
+        for num, table in tables_dict.items():
+            menu.update({num: (f"{num}. Table {table.name}", table)})
+        self.menu_action(db, menu)
 
 
 
 if __name__ == '__main__':
-    # ui = UserInterface()
+    ui = UserInterface()
     database = Database()
-    database.add_field(database.regular_expenses)
+    # database.add_field(database.regular_expenses)
     # database.create_request_add_field_expense()
 
-    # ui.start_ui()
+    ui.start_ui(database)
     # ui.cre
 
     # ui = UserInterface()
