@@ -35,12 +35,10 @@ class Database:
     def __init__(self):
         self.classes = {m.persist_selectable.name: m.class_ for m in Base.registry.mappers}
         self.tables = list(Base.metadata.tables.values())
-        Base.metadata.drop_all()
-        Base.metadata.create_all()
-        self.engine = create_engine('sqlite:///my_database.db', Base.metadata)
-        self.session = sessionmaker(self.engine, expire_on_commit=False)
-        self.connection = self.session()
-
+        self.engine = create_engine('sqlite:///my_database.db')
+        Base.metadata.drop_all(self.engine)
+        Base.metadata.create_all(self.engine)
+        self.session = Session(self.engine)
 
     def get_tables(self):
         return enumerate(table.name for table in self.tables)
@@ -52,8 +50,8 @@ class Database:
         cls = self.classes[table_name]
         obj = cls(**data)
 
-        with self.connection.begin():
-            self.connection.add(obj)
+        with self.session.begin():
+            self.session.add(obj)
         return True
 
     def get_fields(self, table_num):
